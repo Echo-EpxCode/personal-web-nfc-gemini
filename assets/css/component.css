@@ -1,0 +1,55 @@
+.card {
+    border-color: var(--color-border);
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05) !important;
+}
+
+.avatar-circle {
+    width: 48px;
+    height: 48px;
+    background-color: rgba(22, 163, 74, 0.15);
+    color: var(--color-primary);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-family: "Poppins", sans-serif;
+}
+
+.star-rating-input i {
+    cursor: pointer;
+    transition: color 0.15s ease;
+}
+
+.max-vh-85 {
+    max-height: 85vh;
+}
+
+.review-card img.review-thumb {
+    width: 70px;
+    height: 70px;
+    object-fit: cover;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.review-card img.review-thumb:hover {
+    opacity: 0.85;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}

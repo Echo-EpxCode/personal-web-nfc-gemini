@@ -1,0 +1,78 @@
+:root {
+    --color-background: #f8faf9;
+    --color-surface: #ffffff;
+    --color-text: #202522;
+    --color-muted: #69736d;
+    --color-primary: #16a34a;
+    --color-primary-hover: #15803d;
+    --color-border: #e4e9e5;
+    --color-success: #15803d;
+    --color-danger: #dc2626;
+    --color-warning: #d97706;
+    --header-height: 72px;
+}
+
+body {
+    background-color: var(--color-background);
+    color: var(--color-text);
+    font-family: "Inter", sans-serif;
+    overflow-x: hidden;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.font-heading {
+    font-family: "Poppins", sans-serif;
+}
+
+.bg-surface {
+    background-color: var(--color-surface) !important;
+}
+
+.text-primary {
+    color: var(--color-primary) !important;
+}
+
+.bg-primary {
+    background-color: var(--color-primary) !important;
+}
+
+.btn-primary {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: var(--color-primary-hover);
+    border-color: var(--color-primary-hover);
+}
+
+.bg-primary-subtle {
+    background-color: rgba(22, 163, 74, 0.1) !important;
+}
+
+.sticky-top {
+    top: 0;
+    z-index: 1020;
+}
+
+section {
+    scroll-margin-top: var(--header-height);
+}
+
+.hero-section {
+    padding-top: 5rem;
+    padding-bottom: 5rem;
+}
+
+@media (max-width: 767.98px) {
+    .hero-section {
+        padding-top: 3rem;
+        padding-bottom: 3rem;
+    }
+}
