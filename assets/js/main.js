@@ -27,17 +27,41 @@ document.addEventListener("DOMContentLoaded", () => {
             .join("");
     }
 
-    // Close mobile navbar on link click
-    const navLinks = document.querySelectorAll(".navbar-nav .nav-link");
-    const navbarCollapse = document.getElementById("navbarNav");
-    if (navbarCollapse) {
-        const bsCollapse = new bootstrap.Collapse(navbarCollapse, { toggle: false });
-        navLinks.forEach((link) => {
+    const navbarDrawer = document.getElementById("navbarNav");
+    const navbarToggler = document.querySelector('[data-bs-target="#navbarNav"]');
+    const reviewNavButton = document.getElementById("reviewNavButton");
+
+    if (navbarDrawer && navbarToggler) {
+        const offcanvas = bootstrap.Offcanvas.getOrCreateInstance(navbarDrawer);
+
+        navbarDrawer.addEventListener("show.bs.offcanvas", () => {
+            navbarToggler.setAttribute("aria-expanded", "true");
+        });
+        navbarDrawer.addEventListener("hidden.bs.offcanvas", () => {
+            navbarToggler.setAttribute("aria-expanded", "false");
+        });
+
+        navbarDrawer.querySelectorAll('.nav-link[href^="#"]').forEach((link) => {
             link.addEventListener("click", () => {
-                if (navbarCollapse.classList.contains("show")) {
-                    bsCollapse.hide();
+                if (navbarDrawer.classList.contains("show")) {
+                    offcanvas.hide();
                 }
             });
         });
+
+        if (reviewNavButton) {
+            reviewNavButton.addEventListener("click", () => {
+                const reviewModal = document.getElementById("reviewModal");
+                if (!reviewModal) return;
+
+                const showReviewModal = () => bootstrap.Modal.getOrCreateInstance(reviewModal).show();
+                if (navbarDrawer.classList.contains("show")) {
+                    navbarDrawer.addEventListener("hidden.bs.offcanvas", showReviewModal, { once: true });
+                    offcanvas.hide();
+                } else {
+                    showReviewModal();
+                }
+            });
+        }
     }
 });

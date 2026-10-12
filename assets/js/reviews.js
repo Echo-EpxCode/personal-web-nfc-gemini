@@ -1,48 +1,46 @@
 let reviewsDisplayCount = 6;
+let currentReviewPage = 1;
 
 document.addEventListener("DOMContentLoaded", () => {
-    renderRatingSummary();
-    renderReviews();
+    loadReviewsData();
 
     const loadMoreBtn = document.getElementById("loadMoreReviewsBtn");
     if (loadMoreBtn) {
         loadMoreBtn.addEventListener("click", () => {
-            reviewsDisplayCount += 6;
-            renderReviews();
+            currentReviewPage++;
+            loadReviewsData(true);
         });
     }
 });
 
-function getInitials(name) {
-    return name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .substring(0, 2);
+async function loadReviewsData(append = false) {
+    try {
+        const response = await fetch(`actions/get-reviews.php?page=${currentReviewPage}`);
+        const data = await response.json();
+
+        if (data.success) {
+            renderRatingSummary(data.averageRating, data.total);
+            renderReviews(data.reviews, append, data.total);
+        }
+    } catch (error) {
+        console.error("Error loading reviews:", error);
+    }
 }
 
-function renderRatingSummary() {
+function renderRatingSummary(avg, total) {
     const summaryEl = document.getElementById("ratingSummary");
     if (!summaryEl) return;
 
-    const approvedReviews = demoReviews.filter((r) => r.status === "approved");
-    if (approvedReviews.length === 0) {
+    if (total === 0) {
         summaryEl.innerHTML = `<p class="text-muted mb-0">No approved reviews yet.</p>`;
         return;
     }
 
-    const total = approvedReviews.length;
-    const avg = (approvedReviews.reduce((acc, r) => acc + r.rating, 0) / total).toFixed(1);
-
     let starsHtml = "";
     const fullStars = Math.floor(avg);
     for (let i = 0; i < 5; i++) {
-        if (i < fullStars) {
-            starsHtml += '<i class="bi bi-star-fill text-warning"></i>';
-        } else {
-            starsHtml += '<i class="bi bi-star text-muted"></i>';
-        }
+        starsHtml +=
+            i < fullStars ? '<i class="bi bi-star-fill text-warning"></i>' : '<i class="bi bi-star text-muted"></i>';
     }
 
     summaryEl.innerHTML = `
@@ -59,24 +57,18 @@ function renderRatingSummary() {
     `;
 }
 
-function renderReviews() {
+function renderReviews(reviews, append, totalApproved) {
     const container = document.getElementById("reviewsContainer");
     const loadMoreBtn = document.getElementById("loadMoreReviewsBtn");
     if (!container) return;
 
-    const approvedReviews = demoReviews
-        .filter((r) => r.status === "approved")
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-    const visibleReviews = approvedReviews.slice(0, reviewsDisplayCount);
-
-    if (visibleReviews.length === 0) {
+    if (reviews.length === 0 && !append) {
         container.innerHTML = `<div class="col-12 text-center py-5"><p class="text-muted">No reviews available at the moment.</p></div>`;
         if (loadMoreBtn) loadMoreBtn.style.display = "none";
         return;
     }
 
-    container.innerHTML = visibleReviews
+    const cardsHtml = reviews
         .map((review) => {
             let stars = "";
             for (let i = 1; i <= 5; i++) {
@@ -88,16 +80,49 @@ function renderReviews() {
 
             let photosHtml = "";
             if (review.photos && review.photos.length > 0) {
-                photosHtml =
-                    `<div class="d-flex gap-2 mt-3">` +
-                    review.photos
+                const count = review.photos.length;
+                let layoutStyle = "";
+                let itemsHtml = "";
+
+                if (count === 1) {
+                    layoutStyle = "grid-template-columns: 1fr; height: 170px;";
+                    itemsHtml = `
+                        <div style="overflow: hidden; border-radius: 8px; height: 100%;">
+                            <img src="${review.photos[0]}" alt="Customer photo" class="review-thumb" style="width: 100%; height: 100%; object-fit: cover; cursor: pointer; transition: transform 0.2s ease;" onclick="openLightbox('${review.photos[0]}')" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        </div>
+                    `;
+                } else if (count === 2) {
+                    layoutStyle = "grid-template-columns: 1fr 1fr; height: 130px;";
+                    itemsHtml = review.photos
                         .map(
                             (p) => `
-                <img src="${p}" alt="Customer photo" class="review-thumb" onclick="openLightbox('${p}')">
-            `,
+                        <div style="overflow: hidden; border-radius: 8px; height: 100%;">
+                            <img src="${p}" alt="Customer photo" class="review-thumb" style="width: 100%; height: 100%; object-fit: cover; cursor: pointer; transition: transform 0.2s ease;" onclick="openLightbox('${p}')" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        </div>
+                    `,
                         )
-                        .join("") +
-                    `</div>`;
+                        .join("");
+                } else {
+                    // 3 photos: Asymmetric magazine collage (1 large left, 2 stacked right)
+                    layoutStyle = "grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; height: 150px;";
+                    itemsHtml = `
+                        <div style="grid-row: span 2; overflow: hidden; border-radius: 8px; height: 100%;">
+                            <img src="${review.photos[0]}" alt="Customer photo" class="review-thumb" style="width: 100%; height: 100%; object-fit: cover; cursor: pointer; transition: transform 0.2s ease;" onclick="openLightbox('${review.photos[0]}')" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        </div>
+                        <div style="overflow: hidden; border-radius: 8px; height: 100%;">
+                            <img src="${review.photos[1]}" alt="Customer photo" class="review-thumb" style="width: 100%; height: 100%; object-fit: cover; cursor: pointer; transition: transform 0.2s ease;" onclick="openLightbox('${review.photos[1]}')" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        </div>
+                        <div style="overflow: hidden; border-radius: 8px; height: 100%;">
+                            <img src="${review.photos[2]}" alt="Customer photo" class="review-thumb" style="width: 100%; height: 100%; object-fit: cover; cursor: pointer; transition: transform 0.2s ease;" onclick="openLightbox('${review.photos[2]}')" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        </div>
+                    `;
+                }
+
+                photosHtml = `
+                    <div style="display: grid; ${layoutStyle} gap: 6px; margin-top: 1rem;">
+                        ${itemsHtml}
+                    </div>
+                `;
             }
 
             return `
@@ -105,10 +130,10 @@ function renderReviews() {
                 <div class="card border-0 shadow-sm p-4 h-100 rounded-4 review-card d-flex flex-column justify-content-between">
                     <div>
                         <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-circle me-3">${getInitials(review.customerName)}</div>
+                            <div class="avatar-circle me-3"><i class="bi bi-person-fill fs-5"></i></div>
                             <div>
                                 <h6 class="fw-bold font-heading mb-0">${review.customerName}</h6>
-                                <small class="text-muted">${review.createdAt}</small>
+                                <small class="text-muted">${review.createdAt.split(" ")[0]}</small>
                             </div>
                         </div>
                         <div class="mb-2">${stars}</div>
@@ -121,8 +146,15 @@ function renderReviews() {
         })
         .join("");
 
+    if (append) {
+        container.insertAdjacentHTML("beforeend", cardsHtml);
+    } else {
+        container.innerHTML = cardsHtml;
+    }
+
     if (loadMoreBtn) {
-        if (reviewsDisplayCount >= approvedReviews.length) {
+        const renderedCount = container.querySelectorAll(".review-card").length;
+        if (renderedCount >= totalApproved) {
             loadMoreBtn.style.display = "none";
         } else {
             loadMoreBtn.style.display = "inline-block";

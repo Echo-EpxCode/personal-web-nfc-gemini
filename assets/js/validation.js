@@ -85,14 +85,18 @@ document.addEventListener("DOMContentLoaded", () => {
             .join("");
     }
 
-    // Form submission validation
+    // Form submission validation and backend integration
     const reviewForm = document.getElementById("reviewForm");
     if (reviewForm) {
-        reviewForm.addEventListener("submit", (e) => {
+        reviewForm.addEventListener("submit", async (e) => {
             e.preventDefault();
             let isValid = true;
 
             const nameInput = document.getElementById("customerName");
+            const ratingValueInput = document.getElementById("ratingValue");
+            const reviewTextarea = document.getElementById("reviewText");
+            const ratingError = document.getElementById("ratingError");
+
             if (!nameInput.value.trim()) {
                 nameInput.classList.add("is-invalid");
                 isValid = false;
@@ -103,6 +107,8 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!ratingValueInput.value) {
                 ratingError.style.display = "block";
                 isValid = false;
+            } else {
+                ratingError.style.display = "none";
             }
 
             if (!reviewTextarea.value.trim()) {
@@ -114,50 +120,125 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (!isValid) return;
 
-            // Simulate submission success
             const submitBtn = document.getElementById("submitReviewBtn");
             submitBtn.disabled = true;
             submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Submitting...`;
 
-            setTimeout(() => {
+            try {
+                const formData = new FormData();
+                formData.append("customerName", nameInput.value.trim());
+                formData.append("customerEmail", document.getElementById("customerEmail").value.trim());
+                formData.append("rating", ratingValueInput.value);
+                formData.append("reviewText", reviewTextarea.value.trim());
+
+                // Append selected files safely using the selectedFiles array
+                if (typeof selectedFiles !== "undefined" && selectedFiles.length > 0) {
+                    selectedFiles.forEach((file) => {
+                        formData.append("reviewPhotos[]", file);
+                    });
+                }
+
+                const basePath = window.location.pathname.includes("/admin") ? "../" : "";
+                const response = await fetch(`${basePath}actions/submit-review.php`, {
+                    method: "POST",
+                    body: formData,
+                });
+
+                const result = await response.json();
+
                 submitBtn.disabled = false;
                 submitBtn.textContent = "Submit Review";
 
-                // Add to demoReviews as pending
-                const newRev = {
-                    id: "rev-" + (demoReviews.length + 1),
-                    customerName: nameInput.value.trim(),
-                    email: document.getElementById("customerEmail").value.trim(),
-                    rating: parseInt(ratingValueInput.value),
-                    reviewText: reviewTextarea.value.trim(),
-                    status: "pending",
-                    createdAt: new Date().toISOString().split("T")[0],
-                    photos:
-                        selectedFiles.length > 0
-                            ? selectedFiles.map(() => "assets/images/placeholders/review1.jpg")
-                            : [],
-                };
-                demoReviews.push(newRev);
+                if (result.success) {
+                    const modalEl = document.getElementById("reviewModal");
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    modal.hide();
+                    reviewForm.reset();
+                    if (typeof selectedFiles !== "undefined") selectedFiles = [];
+                    if (previewContainer) previewContainer.innerHTML = "";
+                    ratingValueInput.value = "";
 
-                const modalEl = document.getElementById("reviewModal");
-                const modal = bootstrap.Modal.getInstance(modalEl);
-                modal.hide();
-                reviewForm.reset();
-                selectedFiles = [];
-                previewContainer.innerHTML = "";
-                ratingValueInput.value = "";
-                stars.forEach((s) => {
-                    s.classList.remove("bi-star-fill", "text-warning");
-                    s.classList.add("bi-star");
-                });
+                    // Fix: Directly query and reset the star icons
+                    document.querySelectorAll("#starRatingInput i").forEach((s) => {
+                        s.classList.remove("bi-star-fill", "text-warning");
+                        s.classList.add("bi-star");
+                    });
 
+                    Swal.fire({
+                        icon: "success",
+                        title: "Review Received!",
+                        text: result.message,
+                        confirmButtonColor: "#16A34A",
+                    });
+                } else {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Submission Failed",
+                        text: result.error || "Please check your inputs and try again.",
+                        confirmButtonColor: "#DC2626",
+                    });
+                }
+            } catch (error) {
+                console.error("Error submitting review:", error);
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Submit Review";
                 Swal.fire({
-                    icon: "success",
-                    title: "Review Received!",
-                    text: "Thank you! Your review has been submitted successfully and is awaiting moderation approval.",
-                    confirmButtonColor: "#16A34A",
+                    icon: "error",
+                    title: "Error",
+                    text: "An unexpected server error occurred. Please try again.",
+                    confirmButtonColor: "#DC2626",
                 });
-            }, 1000);
+            }
+        });
+    }
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+    const toggleBtn = document.getElementById("toggleSuggestionsBtn");
+    const hiddenContainer = document.getElementById("hiddenSuggestions");
+    const reviewTextarea = document.getElementById("reviewText"); // matches your review text input ID
+
+    // Toggle "+3 More" / "Show Less" view
+    if (toggleBtn && hiddenContainer) {
+        toggleBtn.addEventListener("click", function () {
+            hiddenContainer.classList.toggle("d-none");
+            if (hiddenContainer.classList.contains("d-none")) {
+                toggleBtn.textContent = "+3 More";
+            } else {
+                toggleBtn.textContent = "Show Less";
+            }
+        });
+    }
+
+    // Click chip to append text to the review textarea - ON COMMENT SA INDEX.PHP
+    document.querySelectorAll(".suggestion-chip").forEach((chip) => {
+        chip.addEventListener("click", function () {
+            const textToAdd = this.getAttribute("data-text");
+            if (reviewTextarea) {
+                const currentVal = reviewTextarea.value.trim();
+                reviewTextarea.value = currentVal ? currentVal + " " + textToAdd : textToAdd;
+                reviewTextarea.focus();
+            }
+
+            // Optional visual active toggle
+            this.classList.toggle("btn-outline-secondary");
+            this.classList.toggle("btn-dark");
+        });
+    });
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+    const toggleBtn = document.getElementById("toggleStartersBtn");
+    const hiddenContainer = document.getElementById("hiddenStarters");
+
+    if (toggleBtn && hiddenContainer) {
+        toggleBtn.addEventListener("click", function () {
+            hiddenContainer.classList.toggle("d-none");
+            if (hiddenContainer.classList.contains("d-none")) {
+                toggleBtn.textContent = "+3 More";
+            } else {
+                toggleBtn.textContent = "Show Less";
+            }
         });
     }
 });
