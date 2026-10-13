@@ -178,9 +178,12 @@
                         <!-- Dynamically populated by reviews.js -->
                     </div>
 
-                    <!-- Review Grid / Carousel Container -->
-                    <div id="reviewsContainer" class="row g-4 mb-4">
-                        <!-- Dynamically populated by reviews.js -->
+                    <!-- Horizontally Scrollable Customer Reviews -->
+                    <div class="review-carousel mb-4" role="region" aria-label="Customer reviews">
+                        <div id="reviewsContainer" class="review-card-track" role="list" tabindex="0"
+                            aria-label="Scrollable customer review cards">
+                            <!-- Dynamically populated by reviews.js -->
+                        </div>
                     </div>
 
                     <!-- Load More Reviews Button -->
@@ -203,8 +206,21 @@
                     <!-- Tab navigation or section header for projects vs customer photos -->
                     <h3 class="h4 fw-bold font-heading mb-4"><i class="bi bi-briefcase me-2 text-primary"></i>Featured
                         Projects</h3>
-                    <div id="projectsContainer" class="row g-4 mb-5">
-                        <!-- Dynamically populated by projects.js -->
+                    <div class="project-carousel mb-5" role="region" aria-label="Featured projects">
+                        <div id="projectsContainer" class="project-card-track" role="list" tabindex="0"
+                            aria-label="Scrollable project cards">
+                            <!-- Dynamically populated by projects.js -->
+                        </div>
+                        <div id="projectCarouselControls" class="project-carousel-controls justify-content-center gap-2 mt-4" hidden>
+                            <button type="button" id="previousProjectBtn"
+                                class="btn btn-outline-secondary project-carousel-control" aria-label="Scroll to previous projects">
+                                <i class="bi bi-arrow-left" aria-hidden="true"></i>
+                            </button>
+                            <button type="button" id="nextProjectBtn"
+                                class="btn btn-outline-secondary project-carousel-control" aria-label="Scroll to next projects">
+                                <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="text-center mb-6">
                         <button id="loadMoreProjectsBtn" class="btn btn-outline-secondary px-4">Load More

@@ -63,13 +63,18 @@ function renderReviews(reviews, append, totalApproved) {
     if (!container) return;
 
     if (reviews.length === 0 && !append) {
-        container.innerHTML = `<div class="col-12 text-center py-5"><p class="text-muted">No reviews available at the moment.</p></div>`;
+        container.innerHTML = `<p class="text-center text-muted py-5 mb-0">No reviews available at the moment.</p>`;
+        document.dispatchEvent(new Event("review-cards-updated"));
         if (loadMoreBtn) loadMoreBtn.style.display = "none";
         return;
     }
 
+    const existingCount = append
+        ? container.querySelectorAll(".review-card-slide:not(.review-loop-clone) .review-card").length
+        : 0;
+
     const cardsHtml = reviews
-        .map((review) => {
+        .map((review, index) => {
             let stars = "";
             for (let i = 1; i <= 5; i++) {
                 stars +=
@@ -78,56 +83,26 @@ function renderReviews(reviews, append, totalApproved) {
                         : '<i class="bi bi-star text-muted"></i>';
             }
 
-            let photosHtml = "";
-            if (review.photos && review.photos.length > 0) {
-                const count = review.photos.length;
-                let layoutStyle = "";
-                let itemsHtml = "";
-
-                if (count === 1) {
-                    layoutStyle = "grid-template-columns: 1fr; height: 170px;";
-                    itemsHtml = `
-                        <div style="overflow: hidden; border-radius: 8px; height: 100%;">
-                            <img src="${review.photos[0]}" alt="Customer photo" class="review-thumb" style="width: 100%; height: 100%; object-fit: cover; cursor: pointer; transition: transform 0.2s ease;" onclick="openLightbox('${review.photos[0]}')" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        </div>
-                    `;
-                } else if (count === 2) {
-                    layoutStyle = "grid-template-columns: 1fr 1fr; height: 130px;";
-                    itemsHtml = review.photos
-                        .map(
-                            (p) => `
-                        <div style="overflow: hidden; border-radius: 8px; height: 100%;">
-                            <img src="${p}" alt="Customer photo" class="review-thumb" style="width: 100%; height: 100%; object-fit: cover; cursor: pointer; transition: transform 0.2s ease;" onclick="openLightbox('${p}')" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        </div>
-                    `,
-                        )
-                        .join("");
-                } else {
-                    // 3 photos: Asymmetric magazine collage (1 large left, 2 stacked right)
-                    layoutStyle = "grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; height: 150px;";
-                    itemsHtml = `
-                        <div style="grid-row: span 2; overflow: hidden; border-radius: 8px; height: 100%;">
-                            <img src="${review.photos[0]}" alt="Customer photo" class="review-thumb" style="width: 100%; height: 100%; object-fit: cover; cursor: pointer; transition: transform 0.2s ease;" onclick="openLightbox('${review.photos[0]}')" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        </div>
-                        <div style="overflow: hidden; border-radius: 8px; height: 100%;">
-                            <img src="${review.photos[1]}" alt="Customer photo" class="review-thumb" style="width: 100%; height: 100%; object-fit: cover; cursor: pointer; transition: transform 0.2s ease;" onclick="openLightbox('${review.photos[1]}')" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        </div>
-                        <div style="overflow: hidden; border-radius: 8px; height: 100%;">
-                            <img src="${review.photos[2]}" alt="Customer photo" class="review-thumb" style="width: 100%; height: 100%; object-fit: cover; cursor: pointer; transition: transform 0.2s ease;" onclick="openLightbox('${review.photos[2]}')" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        </div>
-                    `;
-                }
-
-                photosHtml = `
-                    <div style="display: grid; ${layoutStyle} gap: 6px; margin-top: 1rem;">
-                        ${itemsHtml}
+            const photos = Array.isArray(review.photos) ? review.photos.slice(0, 3) : [];
+            const photosHtml = photos.length
+                ? `
+                    <div class="review-photo-grid review-photo-grid-${photos.length}">
+                        ${photos
+                            .map(
+                                (photo) => `
+                                <button type="button" class="review-photo-tile" onclick="openLightbox('${photo}')" aria-label="View customer photo">
+                                    <img src="${photo}" alt="Customer photo" class="review-thumb" loading="lazy">
+                                </button>
+                            `,
+                            )
+                            .join("")}
                     </div>
-                `;
-            }
+                `
+                : "";
 
             return `
-            <div class="col-md-6 col-lg-4">
-                <div class="card border-0 shadow-sm p-4 h-100 rounded-4 review-card d-flex flex-column justify-content-between">
+            <div class="review-card-slide" role="listitem" aria-label="Review ${existingCount + index + 1}">
+                <article class="card border-0 shadow-sm p-4 h-100 rounded-4 review-card review-carousel-card d-flex flex-column justify-content-between">
                     <div>
                         <div class="d-flex align-items-center mb-3">
                             <div class="avatar-circle me-3"><i class="bi bi-person-fill fs-5"></i></div>
@@ -137,10 +112,10 @@ function renderReviews(reviews, append, totalApproved) {
                             </div>
                         </div>
                         <div class="mb-2">${stars}</div>
-                        <p class="text-muted mb-3">"${review.reviewText}"</p>
+                        <p class="review-text text-muted mb-3">"${review.reviewText}"</p>
                     </div>
-                    <div>${photosHtml}</div>
-                </div>
+                    <div class="review-card-photo-slot">${photosHtml}</div>
+                </article>
             </div>
         `;
         })
@@ -152,8 +127,11 @@ function renderReviews(reviews, append, totalApproved) {
         container.innerHTML = cardsHtml;
     }
 
+    document.dispatchEvent(new Event("review-cards-updated"));
+
+    const renderedCount = container.querySelectorAll(".review-card-slide:not(.review-loop-clone) .review-card").length;
+
     if (loadMoreBtn) {
-        const renderedCount = container.querySelectorAll(".review-card").length;
         if (renderedCount >= totalApproved) {
             loadMoreBtn.style.display = "none";
         } else {

@@ -3,6 +3,28 @@ let currentProjectPage = 1;
 document.addEventListener("DOMContentLoaded", () => {
     loadProjectsData();
 
+    const projectTrack = document.getElementById("projectsContainer");
+    const previousProjectBtn = document.getElementById("previousProjectBtn");
+    const nextProjectBtn = document.getElementById("nextProjectBtn");
+
+    if (projectTrack && previousProjectBtn && nextProjectBtn) {
+        const scrollByProjectCard = (direction) => {
+            const firstCard = projectTrack.querySelector(".project-card-slide");
+            if (!firstCard) return;
+
+            const gap = Number.parseFloat(window.getComputedStyle(projectTrack).columnGap) || 0;
+            projectTrack.scrollBy({
+                left: direction * (firstCard.getBoundingClientRect().width + gap),
+                behavior: "auto",
+            });
+        };
+
+        previousProjectBtn.addEventListener("click", () => scrollByProjectCard(-1));
+        nextProjectBtn.addEventListener("click", () => scrollByProjectCard(1));
+        projectTrack.addEventListener("scroll", updateProjectScrollControls, { passive: true });
+        window.addEventListener("resize", updateProjectScrollControls);
+    }
+
     const loadMoreBtn = document.getElementById("loadMoreProjectsBtn");
     if (loadMoreBtn) {
         loadMoreBtn.addEventListener("click", () => {
@@ -11,6 +33,25 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
+
+function updateProjectScrollControls() {
+    const projectTrack = document.getElementById("projectsContainer");
+    const controls = document.getElementById("projectCarouselControls");
+    const previousProjectBtn = document.getElementById("previousProjectBtn");
+    const nextProjectBtn = document.getElementById("nextProjectBtn");
+    if (!projectTrack) return;
+
+    const projectCount = projectTrack.querySelectorAll(".project-card-slide").length;
+    const maxScroll = Math.max(0, projectTrack.scrollWidth - projectTrack.clientWidth);
+    const hasScrollableProjects = projectCount > 1 && maxScroll > 1;
+    if (controls) {
+        controls.hidden = !hasScrollableProjects;
+        controls.classList.toggle("d-flex", hasScrollableProjects);
+    }
+
+    if (previousProjectBtn) previousProjectBtn.disabled = projectTrack.scrollLeft <= 1;
+    if (nextProjectBtn) nextProjectBtn.disabled = maxScroll <= 1 || projectTrack.scrollLeft >= maxScroll - 1;
+}
 
 async function loadProjectsData(append = false) {
     try {
@@ -33,7 +74,8 @@ async function loadProjectsData(append = false) {
         console.error("Error loading projects:", error);
         const container = document.getElementById("projectsContainer");
         if (container && !append) {
-            container.innerHTML = `<div class="col-12 text-center py-5"><p class="text-danger">Unable to load projects at this time. Please check your connection.</p></div>`;
+            container.innerHTML = `<p class="w-100 text-center text-danger py-5 mb-0">Unable to load projects at this time. Please check your connection.</p>`;
+            updateProjectScrollControls();
         }
     }
 }
@@ -44,7 +86,8 @@ function renderProjects(projects, append) {
     if (!container) return;
 
     if (projects.length === 0 && !append) {
-        container.innerHTML = `<div class="col-12 text-center py-5"><p class="text-muted">No published projects found.</p></div>`;
+        container.innerHTML = `<p class="w-100 text-center text-muted py-5 mb-0">No published projects found.</p>`;
+        updateProjectScrollControls();
         if (loadMoreBtn) loadMoreBtn.style.display = "none";
         return;
     }
@@ -52,14 +95,14 @@ function renderProjects(projects, append) {
     const cardsHtml = projects
         .map((proj) => {
             return `
-            <div class="col-md-6 col-lg-4">
-                <div class="card border-0 shadow-sm h-100 rounded-4 overflow-hidden cursor-pointer" onclick="openProjectModal(${proj.id})">
-                    <img src="${proj.cover_image}" alt="${proj.title}" class="card-img-top object-fit-cover" style="height: 220px;">
-                    <div class="card-body p-4 d-flex flex-column justify-content-between">
+            <div class="project-card-slide" role="listitem" aria-label="${proj.title}">
+                <div class="card border-0 shadow-sm h-100 rounded-4 overflow-hidden cursor-pointer project-carousel-card" onclick="openProjectModal(${proj.id})">
+                    <img src="${proj.cover_image}" alt="${proj.title}" class="card-img-top object-fit-cover project-card-image" loading="lazy">
+                    <div class="card-body project-card-body p-4 d-flex flex-column justify-content-between">
                         <div>
                             <span class="badge bg-primary-subtle text-primary mb-2">${proj.technologies.split(",")[0]}</span>
-                            <h5 class="fw-bold font-heading mb-2">${proj.title}</h5>
-                            <p class="text-muted small mb-3">${proj.description}</p>
+                            <h5 class="project-card-title fw-bold font-heading mb-2">${proj.title}</h5>
+                            <p class="project-card-description text-muted small mb-3">${proj.description}</p>
                         </div>
                         <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
                             <small class="text-muted">${proj.completion_date || ""}</small>
@@ -77,6 +120,8 @@ function renderProjects(projects, append) {
     } else {
         container.innerHTML = cardsHtml;
     }
+
+    updateProjectScrollControls();
 
     if (projects.length < 6 && loadMoreBtn) {
         loadMoreBtn.style.display = "none";

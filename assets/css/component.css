@@ -33,16 +33,14 @@
 }
 
 .review-card img.review-thumb {
-    width: 10px; /* Medium size */
-    height: 10px; /* Medium size */
+    display: block;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: opacity 0.2s ease;
 }
 
-.review-card img.review-thumb:hover {
-    opacity: 0.85;
+.review-photo-tile img.review-thumb {
+    cursor: pointer;
 }
 
 @media (prefers-reduced-motion: reduce) {
