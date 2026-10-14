@@ -1,23 +1,7 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
-header('Content-Type: application/json; charset=utf-8');
-
-// Include your database connection (check your path!)
-
-
-
-// Your review query logic here...
 require_once __DIR__ . '/../config/app.php'; // <-- Add this line here!
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/functions.php';
-
-// Example check: Ensure $conn exists
-if (!$conn) {
-    echo json_encode(['error' => 'Database connection failed']);
-    exit();
-}
 
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $limit = 6;
