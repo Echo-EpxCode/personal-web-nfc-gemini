@@ -1,0 +1,37 @@
+name: Deploy Website to InfinityFree
+
+on:
+    push:
+        branches:
+            - main
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+jobs:
+    deploy:
+        name: Upload Website Files
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Get repository files
+              uses: actions/checkout@v4
+
+            - name: Deploy files using FTP
+              uses: SamKirkland/FTP-Deploy-Action@v4
+              with:
+                  server: ${{ secrets.FTP_SERVER }}
+                  username: ${{ secrets.FTP_USERNAME }}
+                  password: ${{ secrets.FTP_PASSWORD }}
+                  protocol: ftp
+                  port: ${{ secrets.FTP_PORT }}
+                  server-dir: /htdocs/
+                  local-dir: ./
+                  dry-run: true
+                  exclude: |
+                      **/.git*
+                      **/.github/**
+                      **/.env
+                      **/*.sql
+                      **/node_modules/**
