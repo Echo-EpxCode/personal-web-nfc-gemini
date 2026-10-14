@@ -29,7 +29,7 @@
             <nav class="navbar navbar-expand-lg bg-surface border-bottom">
                 <div class="container">
                     <a class="navbar-brand fw-bold font-heading text-dark" href="index.php">
-                        <span class="text-primary">Jonefer</span> Codillo
+                        <span class="text-primary">Testing</span> Website
                     </a>
                     <button class="navbar-toggler border-0 d-lg-none" type="button" data-bs-toggle="offcanvas"
                         data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false"
