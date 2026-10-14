@@ -5,10 +5,20 @@ $db_user = 'if0_43159198';
 $db_name = 'if0_43159198_portfolio_db';
 
 $secrets = require __DIR__ . '/db-secrets.php';
-$env_password = getenv('DB_PASSWORD');
-$db_pass = $env_password !== false && $env_password !== ''
-    ? $env_password
-    : ($secrets['password'] ?? '');
+$envPassword = getenv('DB_PASSWORD');
+
+if ($envPassword !== false && $envPassword !== '') {
+    $db_pass = $envPassword;
+} else {
+    $secretsFile = __DIR__ . '/db-secrets.php';
+
+    if (is_file($secretsFile)) {
+        $secrets = require $secretsFile;
+        $db_pass = $secrets['password'] ?? '';
+    } else {
+        $db_pass = '';
+    }
+}
 
 if ($db_pass === '') {
     error_log('Database password is not configured.');
