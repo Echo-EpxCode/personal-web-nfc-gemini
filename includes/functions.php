@@ -5,9 +5,11 @@ function sanitize_input($data) {
     return htmlspecialchars(trim($data), ENT_QUOTES, 'UTF-8');
 }
 
-function json_response($data, $status_code = 200) {
-    http_response_code($status_code);
-    header('Content-Type: application/json; charset=UTF-8');
+function json_response(array $data, int $statusCode = 200): void
+{
+    http_response_code($statusCode);
+    header('Content-Type: application/json; charset=utf-8');
+
     echo json_encode($data);
     exit;
 }

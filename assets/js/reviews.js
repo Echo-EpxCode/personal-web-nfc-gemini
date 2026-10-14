@@ -16,7 +16,23 @@ document.addEventListener("DOMContentLoaded", () => {
 async function loadReviewsData(append = false) {
     try {
         const response = await fetch(`actions/get-reviews.php?page=${currentReviewPage}`);
-        const data = await response.json();
+
+        const responseText = await response.text();
+
+        console.log("HTTP status:", response.status);
+        console.log("Response body:", responseText);
+
+        if (!responseText.trim()) {
+            throw new Error("The PHP endpoint returned an empty response.");
+        }
+
+        let data;
+
+        try {
+            data = JSON.parse(responseText);
+        } catch (error) {
+            throw new Error(`The PHP endpoint returned invalid JSON. HTTP ${response.status}.`);
+        }
 
         if (data.success) {
             renderRatingSummary(data.averageRating, data.total);
