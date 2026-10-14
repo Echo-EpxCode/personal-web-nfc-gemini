@@ -1,13 +1,8 @@
 <?php
 $db_host = 'sql311.infinityfree.com';
 $db_user = 'if0_43159198';
-$db_pass = getenv('DB_PASSWORD');
+$db_pass = 'Tz8huL1011';
 $db_name = 'if0_43159198_XXX';
-
-if ($db_pass === false || $db_pass === '') {
-    error_log('Database password is not configured.');
-    die("Database connection error. Please try again later.");
-}
 
 $conn = mysqli_connect($db_host, $db_user, $db_pass, $db_name);
 
