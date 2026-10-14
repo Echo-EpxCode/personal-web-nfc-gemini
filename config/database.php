@@ -2,7 +2,7 @@
 $db_host = 'sql311.infinityfree.com';
 $db_user = 'if0_43159198';
 $db_pass = 'Tz8huL1011';
-$db_name = 'if0_43159198_XXX';
+$db_name = 'if0_43159198_portfolio_db';
 
 $conn = mysqli_connect($db_host, $db_user, $db_pass, $db_name);
 
