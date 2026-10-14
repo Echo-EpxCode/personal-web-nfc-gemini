@@ -1,5 +1,5 @@
 <?php
 
 return [
-    'password' => 'YOUR_NEW_DATABASE_PASSWORD',
+    'password' => 'Tz8huL1011',
 ];
