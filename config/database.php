@@ -1,39 +1,110 @@
+
 <?php
-$db_host = 'localhost';
-$db_user = 'root';
-$db_name = 'portfolio_db';
-$db_pass = '';
 
-// $db_host = 'sql311.infinityfree.com';
-// $db_user = 'if0_43159198';
-// $db_name = 'if0_43159198_portfolio_db';
+declare(strict_types=1);
 
-// $secrets = require __DIR__ . '/db-secrets.php';
-// $envPassword = getenv('DB_PASSWORD');
+/*
+|--------------------------------------------------------------------------
+| Database Environment
+|--------------------------------------------------------------------------
+|
+| Use 'local' for development on your computer.
+| Use 'production' for your live hosting server.
+|
+*/
 
-// if ($envPassword !== false && $envPassword !== '') {
-//     $db_pass = $envPassword;
-// } else {
-//     $secretsFile = __DIR__ . '/db-secrets.php';
+$environment = 'local'; // Change to 'production' when deploying.
 
-//     if (is_file($secretsFile)) {
-//         $secrets = require $secretsFile;
-//         $db_pass = $secrets['password'] ?? '';
-//     } else {
-//         $db_pass = '';
-//     }
-// }
+/*
+|--------------------------------------------------------------------------
+| Database Configuration
+|--------------------------------------------------------------------------
+*/
 
-// if ($db_pass === '') {
-//     error_log('Database password is not configured.');
-//     die('Database connection error. Please try again later.');
-// }
+$databaseConfigs = [
+    'local' => [
+        'host' => 'localhost',
+        'username' => 'root',
+        'database' => 'portfolio_db',
+        'password' => '',
+    ],
 
-$conn = mysqli_connect($db_host, $db_user, $db_pass, $db_name);
+    'production' => [
+        'host' => 'sql311.infinityfree.com',
+        'username' => 'if0_43159198',
+        'database' => 'if0_43159198_portfolio_db',
+    ],
+];
+
+/*
+|--------------------------------------------------------------------------
+| Select Database Configuration
+|--------------------------------------------------------------------------
+*/
+
+if (!isset($databaseConfigs[$environment])) {
+    error_log('Invalid database environment configured.');
+    die('Database connection error. Please try again later.');
+}
+
+$dbConfig = $databaseConfigs[$environment];
+
+$db_host = $dbConfig['host'];
+$db_user = $dbConfig['username'];
+$db_name = $dbConfig['database'];
+$db_pass = $dbConfig['password'] ?? '';
+
+/*
+|--------------------------------------------------------------------------
+| Load Production Password
+|--------------------------------------------------------------------------
+|
+| Priority:
+| 1. DB_PASSWORD environment variable
+| 2. Local, untracked db-secrets.php file
+|
+*/
+
+if ($environment === 'production') {
+    $envPassword = getenv('DB_PASSWORD');
+
+    if ($envPassword !== false && $envPassword !== '') {
+        $db_pass = $envPassword;
+    } else {
+        $secretsFile = __DIR__ . '/db-secrets.php';
+
+        if (is_file($secretsFile)) {
+            $secrets = require $secretsFile;
+            $db_pass = $secrets['password'] ?? '';
+        }
+    }
+
+    if ($db_pass === '') {
+        error_log('Production database password is not configured.');
+        die('Database connection error. Please try again later.');
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
+| Connect to Database
+|--------------------------------------------------------------------------
+*/
+
+$conn = mysqli_connect(
+    $db_host,
+    $db_user,
+    $db_pass,
+    $db_name
+);
 
 if (!$conn) {
     error_log('Database connection failed: ' . mysqli_connect_error());
     die('Database connection error. Please try again later.');
 }
 
-mysqli_set_charset($conn, 'utf8mb4');
+if (!mysqli_set_charset($conn, 'utf8mb4')) {
+    error_log('Failed to configure database character set.');
+    mysqli_close($conn);
+    die('Database connection error. Please try again later.');
+}
