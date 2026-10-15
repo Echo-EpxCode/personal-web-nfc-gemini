@@ -13,7 +13,10 @@ declare(strict_types=1);
 |
 */
 
-$environment = 'local'; // Change to 'production' when deploying.
+$environment = 'production';
+// Change to 'production' when deploying.
+// chore(database): switch to production configuration
+// chore(database): switch to local configuration
 
 /*
 |--------------------------------------------------------------------------
