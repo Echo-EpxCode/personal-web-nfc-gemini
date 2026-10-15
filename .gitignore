@@ -1,2 +1,4 @@
 
 /actions-runner/
+
+config/db-secrets.php
