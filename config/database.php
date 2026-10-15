@@ -8,15 +8,12 @@ declare(strict_types=1);
 | Database Environment
 |--------------------------------------------------------------------------
 |
-| Use 'local' for development on your computer.
-| Use 'production' for your live hosting server.
+| Use 'local' for development.
+| Use 'production' for your hosted website.
 |
 */
 
 $environment = 'production';
-// Change to 'production' when deploying.
-// chore(database): switch to production configuration
-// chore(database): switch to local configuration for testing
 
 /*
 |--------------------------------------------------------------------------
@@ -41,12 +38,12 @@ $databaseConfigs = [
 
 /*
 |--------------------------------------------------------------------------
-| Select Database Configuration
+| Select Configuration
 |--------------------------------------------------------------------------
 */
 
 if (!isset($databaseConfigs[$environment])) {
-    error_log('Invalid database environment configured.');
+    error_log('Invalid database environment: ' . $environment);
     die('Database connection error. Please try again later.');
 }
 
@@ -61,11 +58,6 @@ $db_pass = $dbConfig['password'] ?? '';
 |--------------------------------------------------------------------------
 | Load Production Password
 |--------------------------------------------------------------------------
-|
-| Priority:
-| 1. DB_PASSWORD environment variable
-| 2. Local, untracked db-secrets.php file
-|
 */
 
 if ($environment === 'production') {
@@ -76,14 +68,28 @@ if ($environment === 'production') {
     } else {
         $secretsFile = __DIR__ . '/db-secrets.php';
 
-        if (is_file($secretsFile)) {
-            $secrets = require $secretsFile;
-            $db_pass = $secrets['password'] ?? '';
+        if (!is_file($secretsFile)) {
+            error_log('Production database secrets file is missing.');
+            die('Database connection error. Please try again later.');
         }
+
+        try {
+            $secrets = require $secretsFile;
+        } catch (Throwable $e) {
+            error_log('Failed to load database secrets: ' . $e->getMessage());
+            die('Database connection error. Please try again later.');
+        }
+
+        if (!is_array($secrets)) {
+            error_log('Database secrets file must return an array.');
+            die('Database connection error. Please try again later.');
+        }
+
+        $db_pass = $secrets['password'] ?? '';
     }
 
-    if ($db_pass === '') {
-        error_log('Production database password is not configured.');
+    if (!is_string($db_pass) || $db_pass === '') {
+        error_log('Production database password is missing or invalid.');
         die('Database connection error. Please try again later.');
     }
 }
@@ -94,20 +100,27 @@ if ($environment === 'production') {
 |--------------------------------------------------------------------------
 */
 
-$conn = mysqli_connect(
-    $db_host,
-    $db_user,
-    $db_pass,
-    $db_name
-);
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-if (!$conn) {
-    error_log('Database connection failed: ' . mysqli_connect_error());
-    die('Database connection error. Please try again later.');
-}
+try {
+    $conn = mysqli_connect(
+        $db_host,
+        $db_user,
+        $db_pass,
+        $db_name
+    );
 
-if (!mysqli_set_charset($conn, 'utf8mb4')) {
-    error_log('Failed to configure database character set.');
-    mysqli_close($conn);
+    mysqli_set_charset($conn, 'utf8mb4');
+
+} catch (mysqli_sql_exception $e) {
+    error_log(
+        'Database connection or configuration failed [' .
+        $environment . ']: ' . $e->getMessage()
+    );
+
+    if (isset($conn) && $conn instanceof mysqli) {
+        mysqli_close($conn);
+    }
+
     die('Database connection error. Please try again later.');
 }
