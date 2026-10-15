@@ -12,6 +12,38 @@
     --header-height: 72px;
 }
 
+/* Add these rules at the very top of assets/css/style.css */
+html,
+body {
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
+}
+
+:root {
+    --bs-body-bg: #fafafa;
+    --bs-body-color: #212529;
+    --bs-primary: #121212;
+    --bs-primary-rgb: 18, 18, 18;
+    --accent-color: #10b981;
+}
+
+body {
+    font-family: "Inter", sans-serif;
+    background-color: var(--bs-body-bg);
+    color: var(--bs-body-color);
+}
+
+.font-heading,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: "Poppins", sans-serif;
+}
+
 html {
     scroll-behavior: smooth;
 }

@@ -71,7 +71,7 @@
             <!-- Section 1 — Developer Introduction -->
             <section id="hero" class="py-5 my-4">
                 <div class="container">
-                    <div class="row align-items-center g-5">
+                <div class="row align-items-center g-4 g-lg-5">
                         
                         <!-- Left Column: Introduction Text -->
                         <div class="col-lg-6 text-lg-start text-center">
